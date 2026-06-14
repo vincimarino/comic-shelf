@@ -1,9 +1,15 @@
 import { createClient } from '@libsql/client';
 import path from 'path';
 
-const DB_PATH = path.join(process.cwd(), 'comics.db');
-
 function getDb() {
+  // En producción (Vercel) usa Turso; en local usa SQLite
+  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+    return createClient({
+      url: process.env.TURSO_DATABASE_URL,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  }
+  const DB_PATH = path.join(process.cwd(), 'comics.db');
   return createClient({ url: `file:${DB_PATH}` });
 }
 

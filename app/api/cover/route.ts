@@ -3,8 +3,18 @@ import { createClient } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
 
-const DB_PATH    = path.join(process.cwd(), 'comics.db');
 const COVERS_DIR = path.join(process.cwd(), 'public', 'covers');
+
+function getDb() {
+  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+    return createClient({
+      url: process.env.TURSO_DATABASE_URL,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  }
+  const DB_PATH = path.join(process.cwd(), 'comics.db');
+  return createClient({ url: `file:${DB_PATH}` });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 });
     }
 
-    const db = createClient({ url: `file:${DB_PATH}` });
+    const db = getDb();
 
     // Get comic wkid
     const result = await db.execute({
